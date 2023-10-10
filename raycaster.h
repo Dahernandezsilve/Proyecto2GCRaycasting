@@ -14,9 +14,9 @@
 using namespace std;
 
 const Color B = {0, 0, 0};
-const Color W = {255, 255, 255};
+const Color W = {255, 2, 255};
 
-const int SCREEN_WIDTH = 800;
+const int SCREEN_WIDTH = 1300;
 const int SCREEN_HEIGHT = 550;
 const int BLOCK = 50;
 
@@ -69,6 +69,7 @@ public:
             cout << line << endl;
         }
     }
+
     void point(int x, int y, Color c) {
         SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
         SDL_RenderDrawPoint(renderer, x, y);
@@ -105,12 +106,11 @@ public:
     void draw_stake(int x, float h, Color c) {
         SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
         float start = SCREEN_HEIGHT/2.0f - h/2.0f;
-        SDL_Rect rect = { x, static_cast<int>(start), 1, static_cast<int>(h) };
+        SDL_Rect rect = { x, static_cast<int>(start), 100, static_cast<int>(h) };
         SDL_RenderFillRect(renderer, &rect);
     }
 
     void render() {
-
         // draw left side of the screen
         for (int x = 0; x < SCREEN_WIDTH; x += BLOCK) {
             for (int y = 0; y < SCREEN_HEIGHT; y += BLOCK) {
@@ -132,18 +132,16 @@ public:
         }
 
         // draw right side of the screen
-
         for (int i = 1; i < SCREEN_WIDTH; i++) {
             double a = player.a + player.fov / 2.0 - player.fov * i / SCREEN_WIDTH;
             Impact impact = cast_ray(a);
             float d = impact.d;
             Color c = impact.c;
-
             if (d == 0) {
                 print("you lose");
                 exit(1);
             }
-            int x = SCREEN_WIDTH + i;
+            int x = SCREEN_WIDTH / 2 + i;
             float h = static_cast<float>(SCREEN_HEIGHT)/static_cast<float>(d) * static_cast<float>(scale);
             draw_stake(x, h, c);
         }

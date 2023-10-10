@@ -32,6 +32,7 @@ int main(int argc, char* argv[])  {
     const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;  // Duración de un cuadro en milisegundos
     int countedFrames = 0;  // Contador de cuadros
     Uint32 capTimer = 0;  // Temporizador para el límite de FPS
+    int speed = 10;
 
     while (running) {
         frameStart = SDL_GetTicks();  // Obtener el tiempo de inicio de este cuadro
@@ -45,22 +46,18 @@ int main(int argc, char* argv[])  {
             if (event.type == SDL_KEYDOWN) {
                 switch(event.key.keysym.sym ){
                     case SDLK_LEFT:
-                        r.player.x -= 10;
+                        r.player.a += 3.14/24;
                         break;
                     case SDLK_RIGHT:
-                        r.player.x += 10;
+                        r.player.a -= 3.14/24;
                         break;
                     case SDLK_UP:
-                        r.player.y -= 10;
+                        r.player.x += speed * cos(r.player.a);
+                        r.player.y += speed * sin(r.player.a);
                         break;
                     case SDLK_DOWN:
-                        r.player.y += 10;
-                        break;
-                    case SDLK_a:
-                        r.player.a += 3.14/12;
-                        break;
-                    case SDLK_d:
-                        r.player.a -= 3.14/12;
+                        r.player.x -= speed * cos(r.player.a);
+                        r.player.y -= speed * sin(r.player.a);
                         break;
                     default:
                         break;
