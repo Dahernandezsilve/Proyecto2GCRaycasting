@@ -106,7 +106,7 @@ public:
     void draw_stake(int x, float h, Color c) {
         SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
         float start = SCREEN_HEIGHT/2.0f - h/2.0f;
-        SDL_Rect rect = { x, static_cast<int>(start), 100, static_cast<int>(h) };
+        SDL_Rect rect = { x, static_cast<int>(start), 1, static_cast<int>(h) };
         SDL_RenderFillRect(renderer, &rect);
     }
 
@@ -130,7 +130,6 @@ public:
             float a = player.a + player.fov / 2 - player.fov * i / SCREEN_WIDTH;
             cast_ray(a);
         }
-
         // draw right side of the screen
         for (int i = 1; i < SCREEN_WIDTH; i++) {
             double a = player.a + player.fov / 2.0 - player.fov * i / SCREEN_WIDTH;
@@ -145,7 +144,6 @@ public:
             float h = static_cast<float>(SCREEN_HEIGHT)/static_cast<float>(d) * static_cast<float>(scale);
             draw_stake(x, h, c);
         }
-
     }
 
     Player player;
