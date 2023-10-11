@@ -50,9 +50,9 @@ public:
         player.y = BLOCK + BLOCK / 2;
 
         player.a = M_PI / 4.0f;
-        player.fov = M_PI / 3.0f;
+        player.fov = M_PI /2.0f;
 
-        scale = 50;
+        scale = 75;
     }
 
     void load_map(const string& filename) {
