@@ -14,7 +14,7 @@
 using namespace std;
 
 const Color B = {0, 0, 0};
-const Color W = {255, 2, 255};
+const Color W = {255, 255, 255};
 
 const int SCREEN_WIDTH = 1300;
 const int SCREEN_HEIGHT = 550;
@@ -98,7 +98,7 @@ public:
 
             point(x, y, W);
 
-            d += 5;
+            d += 1;
         }
         return Impact{d, colors[mapHit]};
     }
@@ -126,13 +126,13 @@ public:
             // Avanzar a la siguiente columna del mapa
         }
 
-        for (int i = 1; i < SCREEN_WIDTH; i++) {
+        for (int i = 1; i < SCREEN_WIDTH ; i++) {
             float a = player.a + player.fov / 2 - player.fov * i / SCREEN_WIDTH;
             cast_ray(a);
         }
         // draw right side of the screen
-        for (int i = 1; i < SCREEN_WIDTH; i++) {
-            double a = player.a + player.fov / 2.0 - player.fov * i / SCREEN_WIDTH;
+        for (int i = 1; i < SCREEN_WIDTH / 2; i++) {
+            double a = player.a + player.fov / 2.0 - player.fov * i / (SCREEN_WIDTH / 2);
             Impact impact = cast_ray(a);
             float d = impact.d;
             Color c = impact.c;
