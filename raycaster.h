@@ -33,7 +33,6 @@ unordered_map<string, Color> colors = {
         { "*", { 220, 36, 33 } },
         { "g", { 64, 169, 68 } },
         { "|", { 255, 0, 0 } },
-
 };
 
 struct Impact {
@@ -48,12 +47,12 @@ public:
 
         player.x = BLOCK + BLOCK / 2;
         player.y = BLOCK + BLOCK / 2;
-
         player.a = M_PI / 4.0f;
         player.fov = M_PI /2.0f;
-
         scale = 75;
     }
+
+    Player player;
 
     void load_map(const string& filename) {
         ifstream file(filename);
@@ -145,8 +144,6 @@ public:
             draw_stake(x, h, c);
         }
     }
-
-    Player player;
 
 private:
     int scale;
