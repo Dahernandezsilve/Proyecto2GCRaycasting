@@ -99,7 +99,7 @@ public:
 
             point(x, y, W);
 
-            d += 1;
+            d += 5;
         }
         return Impact{d, colors[mapHit]};
     }
