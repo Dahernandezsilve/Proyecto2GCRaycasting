@@ -14,13 +14,24 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 
 void clear() {
-    SDL_SetRenderDrawColor(renderer, B.r, B.g, B.b, B.a);
+    SDL_SetRenderDrawColor(renderer, 25, 25, 25, 255);
     SDL_RenderClear(renderer);
+}
+
+void draw_floor() {
+    SDL_SetRenderDrawColor(renderer, 112, 112, 112, 255);
+    SDL_Rect rect = {
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT / 2,
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT / 2
+    };
+    SDL_RenderFillRect(renderer, &rect);
 }
 
 int main(int argc, char* argv[])  {
     SDL_Init(SDL_INIT_VIDEO);
-    window = SDL_CreateWindow("DOOM", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("DOOM", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH * 2, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     Raycaster r = { renderer };
@@ -66,6 +77,7 @@ int main(int argc, char* argv[])  {
         }
 
         clear();
+        draw_floor();
         r.render();
         SDL_RenderPresent(renderer);
 

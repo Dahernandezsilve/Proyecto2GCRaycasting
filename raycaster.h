@@ -16,9 +16,11 @@ using namespace std;
 const Color B = {0, 0, 0};
 const Color W = {255, 255, 255};
 
-const int SCREEN_WIDTH = 1300;
-const int SCREEN_HEIGHT = 550;
-const int BLOCK = 50;
+const int WIDTH = 13;
+const int HEIGHT = 11;
+const int BLOCK = 40;
+const int SCREEN_WIDTH = BLOCK * WIDTH;
+const int SCREEN_HEIGHT = BLOCK * HEIGHT;
 
 struct Player {
     int x;
@@ -49,7 +51,7 @@ public:
         player.y = BLOCK + BLOCK / 2;
         player.a = M_PI / 4.0f;
         player.fov = M_PI /2.0f;
-        scale = 75;
+        scale = 30;
     }
 
     Player player;
@@ -130,8 +132,8 @@ public:
             cast_ray(a);
         }
         // draw right side of the screen
-        for (int i = 1; i < SCREEN_WIDTH / 2; i++) {
-            double a = player.a + player.fov / 2.0 - player.fov * i / (SCREEN_WIDTH / 2);
+        for (int i = 1; i < SCREEN_WIDTH; i++) {
+            double a = player.a + player.fov / 2.0 - player.fov * i / SCREEN_WIDTH;
             Impact impact = cast_ray(a);
             float d = impact.d;
             Color c = impact.c;
@@ -139,7 +141,7 @@ public:
                 print("you lose");
                 exit(1);
             }
-            int x = SCREEN_WIDTH / 2 + i;
+            int x = SCREEN_WIDTH + i;
             float h = static_cast<float>(SCREEN_HEIGHT)/static_cast<float>(d) * static_cast<float>(scale);
             draw_stake(x, h, c);
         }
