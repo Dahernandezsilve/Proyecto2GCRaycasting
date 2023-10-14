@@ -43,7 +43,7 @@ public:
         player.x = BLOCK + BLOCK / 2;
         player.y = BLOCK + BLOCK / 2;
         player.a = M_PI / 4.0f;
-        player.fov = M_PI /2.0f;
+        player.fov = M_PI /4.0f;
         scale = 30;
         textSize = 128;
     }
@@ -86,6 +86,7 @@ public:
     Impact cast_ray(float a) {
         float d = 0;
         string mapHit;
+        int tx;
         while(true) {
             int x = static_cast<int>(player.x + d * cos(a));
             int y = static_cast<int>(player.y + d * sin(a));
@@ -95,21 +96,35 @@ public:
 
             if (map[j][i] != ' ') {
                 mapHit = map[j][i];
+                int hitx = x - i * BLOCK;
+                int hity = y - j * BLOCK;
+                int maxHit;
+                if (hitx == 0 || hitx == BLOCK - 1) {
+                    maxHit = hity;
+                } else {
+                    maxHit = hitx;
+                }
+                tx = maxHit * textSize / BLOCK;
                 break;
             }
 
             point(x, y, W);
 
-            d += 5;
+            d += 1;
         }
-        return Impact{d, "+", 0};
+        return Impact{d, mapHit, tx};
     }
 
-    void draw_stake(int x, float h, Color c) {
-        SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
-        float start = SCREEN_HEIGHT/2.0f - h/2.0f;
-        SDL_Rect rect = { x, static_cast<int>(start), 1, static_cast<int>(h) };
-        SDL_RenderFillRect(renderer, &rect);
+    void draw_stake(int x, float h, Impact i) {
+        float start = SCREEN_HEIGHT / 2.0f - h / 2.0f;
+        float end = start + h;
+        for (int y = start; y < end; y++) {
+            int ty = ((y - start) * textSize) / h;
+            Color c = ImageLoader::getPixelColor(i.mapHit, i.ofx,ty);
+            SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
+            SDL_Rect rect = { x, static_cast<int>(start), 1, static_cast<int>(h) };
+            SDL_RenderDrawPoint(renderer, x,y);
+        }
     }
 
     void render() {
@@ -127,7 +142,7 @@ public:
             // Avanzar a la siguiente columna del mapa
         }
 
-        for (int i = 1; i < SCREEN_WIDTH ; i++) {
+        for (int i = 1; i < SCREEN_WIDTH ; i+=5) {
             float a = player.a + player.fov / 2 - player.fov * i / SCREEN_WIDTH;
             cast_ray(a);
         }
@@ -143,7 +158,7 @@ public:
             }
             int x = SCREEN_WIDTH + i;
             float h = static_cast<float>(SCREEN_HEIGHT)/static_cast<float>(d) * static_cast<float>(scale);
-            draw_stake(x, h, c);
+            draw_stake(x, h, impact);
         }
     }
 
