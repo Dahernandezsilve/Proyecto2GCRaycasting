@@ -1,3 +1,4 @@
+
 #include <SDL.h>
 #include <SDL_events.h>
 #include <SDL_render.h>
@@ -102,6 +103,8 @@ int main(int argc, char* argv[])  {
 
     Raycaster r = { renderer };
     r.load_map("../assets/map.txt");
+    Color c = Color(20, 0, 0);
+    Fog f = {renderer, 120, c};
 
     bool running = true;
     Uint32 frameStart;
@@ -181,7 +184,9 @@ int main(int argc, char* argv[])  {
         draw_floor(renderer);
         draw_bg(renderer);
         r.render();
+
         draw_ui(renderer, playerImage, widthP, heightP);
+        f.draw();
         SDL_RenderPresent(renderer);
 
         ++countedFrames;

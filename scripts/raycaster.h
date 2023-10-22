@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include "color.h"
 #include "imageLoader.h"
+#include <omp.h>
 
 using namespace std;
 
@@ -78,6 +79,7 @@ public:
         int count = static_cast<int>(pointList.size());
         vector<SDL_Point> sdlPoints(count);
 
+        #pragma omp parallel for
         for (int i = 0; i < count; i++) {
             sdlPoints[i] = {pointList[i].first, pointList[i].second};
         }
@@ -154,7 +156,7 @@ public:
                 break;
             }
 
-            d += 1;
+            d += 2;
             x = static_cast<int>(player.x + d * cos(a));
             y = static_cast<int>(player.y + d * sin(a));
         }
@@ -235,6 +237,7 @@ public:
         // Recopila todos los puntos a dibujar junto con sus colores
         vector<pair<int, int>> pointsToDraw;
         vector<Color> pointColors;
+
         for (int i = 0; i < numRays; i++) {
             double a = player.a + halfFov - deltaAngle * i;
             if (a < leftFrustum || a > rightFrustum) {
@@ -256,6 +259,7 @@ public:
             float end = start + h;
 
             // Agrega los puntos y sus colores a las listas correspondientes
+            #pragma omp parallel for // Inicio de la sección paralela
             for (int y = static_cast<int>(start); y < static_cast<int>(end); y++) {
                 int ty = static_cast<int>(((y - start) * textSize) / h);
                 Color pointColor = ImageLoader::getPixelColor(impact.mapHit, impact.ofx, ty);
@@ -326,4 +330,24 @@ private:
         }
         return Impact{d, mapHit, tx};
     }
+};
+
+class Fog {
+public:
+    Fog(SDL_Renderer* renderer, int opacity, Color color)
+            : renderer(renderer), opacity(opacity), color(color) {}
+
+    void draw() {
+        // Dibuja un rectángulo de niebla en toda la pantalla
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, opacity);
+        SDL_Rect rect = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+        SDL_RenderFillRect(renderer, &rect);
+    }
+
+private:
+    SDL_Renderer* renderer;
+    int opacity;
+    Color color;
+
 };
