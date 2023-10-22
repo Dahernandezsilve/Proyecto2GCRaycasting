@@ -89,6 +89,7 @@ public:
         vector<Uint8> b(count);
         vector<Uint8> a(count);
 
+
         for (int i = 0; i < count; i++) {
             r[i] = colors[i].r;
             g[i] = colors[i].g;
@@ -120,16 +121,23 @@ public:
     }
 
     void rect(int x, int y, const string& mapHit) {
-        for(int cx = x; cx < x + static_cast<int>(BLOCK/3); cx++){
-            for(int cy = y; cy < y + static_cast<int>(BLOCK/3); cy++){
-                int tx = ((cx - x) * textSize) / static_cast<int>(BLOCK /3) ;
-                int ty = ((cy - y) * textSize) / static_cast<int>(BLOCK /3);
+        vector<pair<int, int>> pointsToDraw;
+        vector<Color> pointColors;
+
+        for (int cx = x; cx < x + static_cast<int>(BLOCK / 3); cx++) {
+            for (int cy = y; cy < y + static_cast<int>(BLOCK / 3); cy++) {
+                int tx = ((cx - x) * textSize) / static_cast<int>(BLOCK / 3);
+                int ty = ((cy - y) * textSize) / static_cast<int>(BLOCK / 3);
                 Color c = ImageLoader::getPixelColor(mapHit, tx, ty);
-                SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, 255);
-                SDL_RenderDrawPoint(renderer, cx, cy);
+                pointsToDraw.push_back({cx, cy});
+                pointColors.push_back(c);
             }
         }
+
+        // Dibuja todos los puntos a la vez con sus colores correspondientes
+        points(pointsToDraw, pointColors);
     }
+
 
     Impact cast_ray(float a) {
         float d = 0;
@@ -170,30 +178,40 @@ public:
         int x = static_cast<int>(player.mapx + d * cos(a));
         int y = static_cast<int>(player.mapy + d * sin(a));
 
+        vector<pair<int, int>> pointsToDraw; // Para almacenar los puntos a dibujar
+        vector<Color> pointColors; // Para almacenar los colores de los puntos
+
         while (true) {
-            int i = static_cast<int>(x / (BLOCK/3));
-            int j = static_cast<int>(y / (BLOCK/3));
+            int i = static_cast<int>(x / (BLOCK / 3));
+            int j = static_cast<int>(y / (BLOCK / 3));
 
             if (map[j][i] != ' ') {
                 mapHit = map[j][i];
-                int hitx = x - i * static_cast<int>(BLOCK/3);
-                int hity = y - j * static_cast<int>(BLOCK/3);
+                int hitx = x - i * static_cast<int>(BLOCK / 3);
+                int hity = y - j * static_cast<int>(BLOCK / 3);
                 int maxHit;
-                if (hitx == 0 || hitx == static_cast<int>(BLOCK/3) - 1) {
+                if (hitx == 0 || hitx == static_cast<int>(BLOCK / 3) - 1) {
                     maxHit = hity;
                 } else {
                     maxHit = hitx;
                 }
-                tx = maxHit * textSize / static_cast<int>(BLOCK/3);
+                tx = maxHit * textSize / static_cast<int>(BLOCK / 3);
                 break;
             }
 
             d += 1;
-            point(x, y, W);
+
+            // Agrega el punto a la lista de puntos a dibujar
+            pointsToDraw.push_back({x, y});
+            pointColors.push_back(W); // Color de los puntos en el mapa (puedes cambiarlo si es necesario)
 
             x = static_cast<int>(player.mapx + d * cos(a));
             y = static_cast<int>(player.mapy + d * sin(a));
         }
+
+        // Dibuja todos los puntos en el mapa a la vez con sus colores correspondientes
+        points(pointsToDraw, pointColors);
+
         return Impact{d, mapHit, tx};
     }
 
@@ -252,6 +270,7 @@ public:
                 print("you lose");
                 exit(1);
             }
+
             int x = i;
             float h = static_cast<float>(SCREEN_HEIGHT) / (d * cos(a - player.a)) * static_cast<float>(scale);
 
@@ -303,10 +322,20 @@ private:
         float d = 0;
         string mapHit;
         int tx;
-        int x = static_cast<int>(player.x + d * cos(a));
-        int y = static_cast<int>(player.y + d * sin(a));
+        int x = static_cast<int>(player.x);
+        int y = static_cast<int>(player.y);
+        double cosA = cos(a);
+        double sinA = sin(a);
 
         while (true) {
+            x = static_cast<int>(player.x + d * cosA);
+            y = static_cast<int>(player.y + d * sinA);
+
+            if (x < 0 || y < 0 || x >= SCREEN_WIDTH || y >= SCREEN_HEIGHT) {
+                // El rayo está fuera de la pantalla, detén la búsqueda.
+                break;
+            }
+
             int i = static_cast<int>(x / BLOCK);
             int j = static_cast<int>(y / BLOCK);
 
@@ -325,11 +354,12 @@ private:
             }
 
             d += 1;
-            x = static_cast<int>(player.x + d * cos(a));
-            y = static_cast<int>(player.y + d * sin(a));
         }
+
         return Impact{d, mapHit, tx};
     }
+
+
 };
 
 class Fog {
@@ -345,9 +375,10 @@ public:
         SDL_RenderFillRect(renderer, &rect);
     }
 
+
+
 private:
     SDL_Renderer* renderer;
     int opacity;
     Color color;
-
 };
