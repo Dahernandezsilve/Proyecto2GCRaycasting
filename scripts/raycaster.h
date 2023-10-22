@@ -73,6 +73,50 @@ public:
         SDL_RenderDrawPoint(renderer, x, y);
     }
 
+// Nueva función altamente optimizada para dibujar múltiples puntos a la vez con colores variables
+    void points(const vector<pair<int, int>>& pointList, const vector<Color>& colors) {
+        int count = static_cast<int>(pointList.size());
+        vector<SDL_Point> sdlPoints(count);
+
+        for (int i = 0; i < count; i++) {
+            sdlPoints[i] = {pointList[i].first, pointList[i].second};
+        }
+
+        vector<Uint8> r(count);
+        vector<Uint8> g(count);
+        vector<Uint8> b(count);
+        vector<Uint8> a(count);
+
+        for (int i = 0; i < count; i++) {
+            r[i] = colors[i].r;
+            g[i] = colors[i].g;
+            b[i] = colors[i].b;
+            a[i] = colors[i].a;
+        }
+
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Color de fondo (puedes cambiarlo)
+
+        int startIndex = 0;
+        int endIndex = 1;
+
+        while (endIndex < count) {
+            while (endIndex < count && r[endIndex] == r[startIndex] && g[endIndex] == g[startIndex] && b[endIndex] == b[startIndex] && a[endIndex] == a[startIndex]) {
+                endIndex++;
+            }
+
+            // Establece el color una vez y traza todos los puntos del mismo color juntos
+            SDL_SetRenderDrawColor(renderer, r[startIndex], g[startIndex], b[startIndex], a[startIndex]);
+            SDL_RenderDrawPoints(renderer, sdlPoints.data() + startIndex, endIndex - startIndex);
+
+            startIndex = endIndex;
+            endIndex++;
+        }
+
+        // Trazar el último grupo de puntos
+        SDL_SetRenderDrawColor(renderer, r[startIndex], g[startIndex], b[startIndex], a[startIndex]);
+        SDL_RenderDrawPoints(renderer, sdlPoints.data() + startIndex, count - startIndex);
+    }
+
     void rect(int x, int y, const string& mapHit) {
         for(int cx = x; cx < x + static_cast<int>(BLOCK/3); cx++){
             for(int cy = y; cy < y + static_cast<int>(BLOCK/3); cy++){
@@ -178,22 +222,52 @@ public:
     }
 
     void render() {
-        const int numRays = SCREEN_WIDTH; // Número de rayos
+        const int numRays = SCREEN_WIDTH;
         const double deltaAngle = player.fov / numRays;
-        // draw right side of the screen
+        const double halfFov = player.fov / 2;
+        const double playerCosA = cos(player.a);
+        const double playerSinA = sin(player.a);
+
+        // Calcular los vértices del frustum
+        double leftFrustum = player.a - halfFov;
+        double rightFrustum = player.a + halfFov;
+
+        // Recopila todos los puntos a dibujar junto con sus colores
+        vector<pair<int, int>> pointsToDraw;
+        vector<Color> pointColors;
         for (int i = 0; i < numRays; i++) {
-            double a = player.a + player.fov / 2 - deltaAngle * i;
-            Impact impact = cast_ray(a);
+            double a = player.a + halfFov - deltaAngle * i;
+            if (a < leftFrustum || a > rightFrustum) {
+                // El rayo está fuera del frustum, no lo procesamos
+                continue;
+            }
+
+            Impact impact = cast_ray(a, playerCosA, playerSinA);
             float d = impact.d;
-            Color c = Color(255,0,0);
+            Color c = Color(255, 0, 0);
             if (d == 0) {
                 print("you lose");
                 exit(1);
             }
             int x = i;
             float h = static_cast<float>(SCREEN_HEIGHT) / (d * cos(a - player.a)) * static_cast<float>(scale);
-            draw_stake(x, h, impact);
+
+            float start = SCREEN_HEIGHT / 2.0f - h / 2.0f;
+            float end = start + h;
+
+            // Agrega los puntos y sus colores a las listas correspondientes
+            for (int y = static_cast<int>(start); y < static_cast<int>(end); y++) {
+                int ty = static_cast<int>(((y - start) * textSize) / h);
+                Color pointColor = ImageLoader::getPixelColor(impact.mapHit, impact.ofx, ty);
+                int px = x;
+                int py = y;
+                pointsToDraw.push_back({px, py});
+                pointColors.push_back(pointColor);
+            }
         }
+
+        // Dibuja los puntos en batch con sus colores correspondientes
+        points(pointsToDraw, pointColors);
 
         minimap_bg(renderer);
 
@@ -221,4 +295,35 @@ private:
     SDL_Renderer* renderer;
     vector<string> map;
     int textSize;
+    Impact cast_ray(float a, double playerCosA, double playerSinA) {
+        float d = 0;
+        string mapHit;
+        int tx;
+        int x = static_cast<int>(player.x + d * cos(a));
+        int y = static_cast<int>(player.y + d * sin(a));
+
+        while (true) {
+            int i = static_cast<int>(x / BLOCK);
+            int j = static_cast<int>(y / BLOCK);
+
+            if (map[j][i] != ' ') {
+                mapHit = map[j][i];
+                int hitx = x - i * BLOCK;
+                int hity = y - j * BLOCK;
+                int maxHit;
+                if (hitx == 0 || hitx == BLOCK - 1) {
+                    maxHit = hity;
+                } else {
+                    maxHit = hitx;
+                }
+                tx = maxHit * textSize / BLOCK;
+                break;
+            }
+
+            d += 1;
+            x = static_cast<int>(player.x + d * cos(a));
+            y = static_cast<int>(player.y + d * sin(a));
+        }
+        return Impact{d, mapHit, tx};
+    }
 };

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <SDL.h>
 #include <SDL_events.h>
 #include <SDL_render.h>
