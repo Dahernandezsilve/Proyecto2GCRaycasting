@@ -37,6 +37,7 @@ struct Player {
     float fov;
 };
 
+
 struct Impact {
     float d;
     string mapHit;
@@ -150,7 +151,7 @@ public:
             int i = static_cast<int>(x / BLOCK);
             int j = static_cast<int>(y / BLOCK);
 
-            if (map[j][i] != ' ') {
+            if (map[j][i] != ' ' && map[j][i] != '.') {
                 mapHit = map[j][i];
                 int hitx = x - i * BLOCK;
                 int hity = y - j * BLOCK;
@@ -185,7 +186,7 @@ public:
             int i = static_cast<int>(x / (BLOCK / 3));
             int j = static_cast<int>(y / (BLOCK / 3));
 
-            if (map[j][i] != ' ') {
+            if (map[j][i] != ' ' && map[j][i] != '.') {
                 mapHit = map[j][i];
                 int hitx = x - i * static_cast<int>(BLOCK / 3);
                 int hity = y - j * static_cast<int>(BLOCK / 3);
@@ -241,7 +242,37 @@ public:
         ImageLoader::render(renderer, "mm", 0, 0, size, 110);
     }
 
+    // Función para verificar si el jugador ha ganado
+    bool has_won() {
+        int player_x = static_cast<int>(player.x / BLOCK);
+        int player_y = static_cast<int>(player.y / BLOCK);
+
+        // Comprueba si el jugador está en una posición de victoria ('y' en el mapa)
+        if (map[player_y][player_x] == '.') {
+            return true;
+        }
+
+        return false;
+    }
+
+    // Nueva función para mostrar la pantalla de victoria
+    void draw_victory_screen() {
+        // Limpia el renderizador
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        // Dibuja la pantalla de victoria (imagen o texto)
+        ImageLoader::render(renderer, "8c", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        // Refresca el renderizador
+        SDL_RenderPresent(renderer);
+    }
+
+
+
     void render() {
+
+
         const int numRays = SCREEN_WIDTH;
         const double deltaAngle = player.fov / numRays;
         const double halfFov = player.fov / 2;
@@ -299,7 +330,7 @@ public:
             for (int y = 0; y < static_cast<int>(SCREEN_HEIGHT /3); y += static_cast<int>(BLOCK /3)) {
                 int i = static_cast<int>(x / static_cast<int>(BLOCK /3));
                 int j = static_cast<int>(y / static_cast<int>(BLOCK /3));
-                if (map[j][i] != ' ') {
+                if (map[j][i] != ' ' && map[j][i] != '.') {
                     string mapHit;
                     mapHit = map[j][i];
                     rect(x, y, mapHit);
@@ -311,6 +342,9 @@ public:
             float a = player.mapA + player.fov / 2 - player.fov * i / static_cast<int>(SCREEN_HEIGHT/3);
             cast_ray_map(a);
         }
+
+        // Puedes usar la función `has_won` o cualquier otro método que desees.
+
     }
 
 private:
@@ -339,7 +373,7 @@ private:
             int i = static_cast<int>(x / BLOCK);
             int j = static_cast<int>(y / BLOCK);
 
-            if (map[j][i] != ' ') {
+            if (map[j][i] != ' ' && map[j][i] != '.') {
                 mapHit = map[j][i];
                 int hitx = x - i * BLOCK;
                 int hity = y - j * BLOCK;

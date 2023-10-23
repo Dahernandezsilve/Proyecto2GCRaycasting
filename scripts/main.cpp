@@ -1,4 +1,3 @@
-
 #include <SDL.h>
 #include <SDL_events.h>
 #include <SDL_render.h>
@@ -176,6 +175,8 @@ void showWelcomeScreen(SDL_Renderer* renderer, bool& showWelcome) {
 }
 
 
+bool hasWon = false;
+
 bool showWelcome = true;
 
 int main(int argc, char* argv[])  {
@@ -184,6 +185,9 @@ int main(int argc, char* argv[])  {
 
     window = SDL_CreateWindow("DOOM", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_EVENTS);
+     // Captura el mouse
+
 
     ImageLoader::loadImage("+","../assets/skullN2.png");
     ImageLoader::loadImage("|","../assets/skullN1.png");
@@ -219,7 +223,6 @@ int main(int argc, char* argv[])  {
     ImageLoader::loadImage("7c","../assets/loseScreen/7C.png");
     ImageLoader::loadImage("8c","../assets/loseScreen/8C.png");
 
-
     Raycaster r = { renderer };
     r.load_map("../assets/map.txt");
     Color c = Color(20, 0, 0);
@@ -242,6 +245,8 @@ int main(int argc, char* argv[])  {
     showWelcomeScreen(renderer, showWelcome);
 
     std::thread musicThread(PlayMusicThread);
+    int prevMouseX = 0;
+    SDL_SetRelativeMouseMode(SDL_TRUE);
     while (running) {
         frameStart = SDL_GetTicks();
 
@@ -256,6 +261,20 @@ int main(int argc, char* argv[])  {
             }
             if (event.type == SDL_KEYUP) {
                 keys[event.key.keysym.scancode] = false;
+            }
+
+            // Captura los movimientos del mouse
+            if (event.type == SDL_MOUSEMOTION) {
+                int mouseX = event.motion.x;
+                print(mouseX);
+                int mouseXDelta = mouseX - prevMouseX;
+                prevMouseX = mouseX;
+
+
+
+                // Ajusta la dirección de vista del jugador en función del movimiento del mouse
+                r.player.a -= static_cast<float>(mouseXDelta) * 0.10f; // Puedes ajustar el factor de sensibilidad
+                r.player.mapA -= static_cast<float>(mouseXDelta) * 0.10f;
             }
         }
 
@@ -298,6 +317,16 @@ int main(int argc, char* argv[])  {
             r.player.y -= static_cast<int>(speed * sin(r.player.a));
             r.player.mapx = static_cast<int>(r.player.x / 3);
             r.player.mapy = static_cast<int>(r.player.y / 3);
+        }
+
+
+        if (hasWon) {
+            // El jugador ha ganado, muestra la pantalla de victoria.
+            r.draw_victory_screen();
+        }
+
+        if (r.has_won()) {
+            hasWon = true;
         }
 
         clear(renderer);
