@@ -180,6 +180,7 @@ bool hasWon = false;
 bool showWelcome = true;
 
 int main(int argc, char* argv[])  {
+    SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_Init(SDL_INIT_VIDEO);
     ImageLoader::init();
 
@@ -187,7 +188,6 @@ int main(int argc, char* argv[])  {
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_EVENTS);
      // Captura el mouse
-
 
     ImageLoader::loadImage("+","../assets/skullN2.png");
     ImageLoader::loadImage("|","../assets/skullN1.png");
@@ -223,6 +223,7 @@ int main(int argc, char* argv[])  {
     ImageLoader::loadImage("7c","../assets/loseScreen/7C.png");
     ImageLoader::loadImage("8c","../assets/loseScreen/8C.png");
 
+
     Raycaster r = { renderer };
     r.load_map("../assets/map.txt");
     Color c = Color(20, 0, 0);
@@ -246,7 +247,7 @@ int main(int argc, char* argv[])  {
 
     std::thread musicThread(PlayMusicThread);
     int prevMouseX = 0;
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+
     while (running) {
         frameStart = SDL_GetTicks();
 
@@ -266,15 +267,12 @@ int main(int argc, char* argv[])  {
             // Captura los movimientos del mouse
             if (event.type == SDL_MOUSEMOTION) {
                 int mouseX = event.motion.x;
-                print(mouseX);
+                print(event.motion.x);
                 int mouseXDelta = mouseX - prevMouseX;
                 prevMouseX = mouseX;
-
-
-
                 // Ajusta la dirección de vista del jugador en función del movimiento del mouse
-                r.player.a -= static_cast<float>(mouseXDelta) * 0.10f; // Puedes ajustar el factor de sensibilidad
-                r.player.mapA -= static_cast<float>(mouseXDelta) * 0.10f;
+                r.player.a -= static_cast<float>(mouseXDelta) * 0.02f; // Puedes ajustar el factor de sensibilidad
+                r.player.mapA -= static_cast<float>(mouseXDelta) * 0.02f;
             }
         }
 

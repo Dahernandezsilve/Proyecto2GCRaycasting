@@ -237,6 +237,7 @@ public:
             SDL_RenderDrawPoint(renderer, x, y);
         }
     }
+
     void minimap_bg(SDL_Renderer* renderer) {
         int size = 230;
         ImageLoader::render(renderer, "mm", 0, 0, size, 110);
