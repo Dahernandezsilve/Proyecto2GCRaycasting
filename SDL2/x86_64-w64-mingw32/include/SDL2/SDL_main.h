@@ -154,7 +154,6 @@ extern "C" {
 typedef int (*SDL_main_func)(int argc, char *argv[]);
 extern SDLMAIN_DECLSPEC int SDL_main(int argc, char *argv[]);
 
-
 /**
  * Circumvent failure of SDL_Init() when not using SDL_main() as an entry
  * point.

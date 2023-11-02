@@ -138,7 +138,7 @@ void applyWavesDistortion(SDL_Renderer* renderer) {
     SDL_DestroyTexture(tempTexture);
 }
 
-void showWelcomeScreen(SDL_Renderer* renderer, bool& showWelcome) {
+void showWelcomeScreen(SDL_Renderer* renderer) {
     std::vector<std::string> imageKeys = {"0", "1", "2", "3", "4", "5", "6", "7", "8"};
 
     Uint32 frameInterval = 250;
@@ -168,26 +168,48 @@ void showWelcomeScreen(SDL_Renderer* renderer, bool& showWelcome) {
             } else if (event.type == SDL_KEYDOWN) {
                 // Al presionar cualquier tecla, ocultar la pantalla de bienvenida
                 quit = true;
-                showWelcome = false;
             }
         }
     }
 }
 
+string selectMapScreen(SDL_Renderer* renderer, string key) {
+    bool quit = false;
+    while (!quit) {
+        ImageLoader::render(renderer, key, 0, 0, 690, 330);
+        SDL_RenderPresent(renderer);
+
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                // Salir si el usuario cierra la ventana
+                quit = true;
+                break;
+            } else if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_a) {
+                    return "a";
+                }
+                if (event.key.keysym.sym == SDLK_b) {
+                    return "b";
+                }
+            }
+        }
+    }
+}
 
 bool hasWon = false;
-
-bool showWelcome = true;
 
 int main(int argc, char* argv[])  {
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_Init(SDL_INIT_VIDEO);
     ImageLoader::init();
+    if (SDL_Init(SDL_INIT_AUDIO) != 0) {
+        // Manejar error de inicialización
+    }
 
     window = SDL_CreateWindow("DOOM", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_EVENTS);
-     // Captura el mouse
 
     ImageLoader::loadImage("+","../assets/skullN2.png");
     ImageLoader::loadImage("|","../assets/skullN1.png");
@@ -222,10 +244,9 @@ int main(int argc, char* argv[])  {
     ImageLoader::loadImage("6c","../assets/loseScreen/6C.png");
     ImageLoader::loadImage("7c","../assets/loseScreen/7C.png");
     ImageLoader::loadImage("8c","../assets/loseScreen/8C.png");
-
+    ImageLoader::loadImage("select","../assets/select.png");
 
     Raycaster r = { renderer };
-    r.load_map("../assets/map.txt");
     Color c = Color(20, 0, 0);
     Fog f = {renderer, 120, c};
 
@@ -243,7 +264,18 @@ int main(int argc, char* argv[])  {
     bool isMovingRight = false;
 
     bool keys[SDL_NUM_SCANCODES] = {false};
-    showWelcomeScreen(renderer, showWelcome);
+    showWelcomeScreen(renderer);
+    string select = selectMapScreen(renderer,"select");
+    if (select == "a")
+        r.load_map("../assets/map.txt");
+    if (select == "b")
+        r.load_map("../assets/map2.txt");
+
+    vector<string> map = r.getMap();
+
+    for (const std::string &element : map) {
+        std::cout << element << std::endl;
+    }
 
     std::thread musicThread(PlayMusicThread);
     int prevMouseX = 0;
@@ -305,16 +337,31 @@ int main(int argc, char* argv[])  {
             }
         }
         if (keys[SDL_SCANCODE_UP]) {
-            r.player.x += static_cast<int>(speed * cos(r.player.a));
-            r.player.y += static_cast<int>(speed * sin(r.player.a));
-            r.player.mapx = static_cast<int>(r.player.x / 3);
-            r.player.mapy = static_cast<int>(r.player.y / 3);
+            int newX = (r.player.x + static_cast<int>(speed * cos(r.player.a)));
+            int newXmap = newX/BLOCK;
+            int newY = (r.player.y + static_cast<int>(speed * sin(r.player.a)));
+            int newYmap = newY/BLOCK;
+
+            std::cout << map[newYmap][newXmap] << std::endl;
+            if (map[newYmap][newXmap] == ' ' || map[newYmap][newXmap] == '.'){
+                r.player.x = newX;
+                r.player.y = newY;
+                r.player.mapx = static_cast<int>(r.player.x / 3);
+                r.player.mapy = static_cast<int>(r.player.y / 3);
+            }
         }
         if (keys[SDL_SCANCODE_DOWN]) {
-            r.player.x -= static_cast<int>(speed * cos(r.player.a));
-            r.player.y -= static_cast<int>(speed * sin(r.player.a));
-            r.player.mapx = static_cast<int>(r.player.x / 3);
-            r.player.mapy = static_cast<int>(r.player.y / 3);
+            int newX = (r.player.x - static_cast<int>(speed * cos(r.player.a)));
+            int newXmap = newX/BLOCK;
+            int newY = (r.player.y - static_cast<int>(speed * sin(r.player.a)));
+            int newYmap = newY/BLOCK;
+            std::cout << map[newYmap][newXmap] << std::endl;
+            if (map[newYmap][newXmap] == ' ' || map[newYmap][newXmap] == '.'){
+                r.player.x = newX;
+                r.player.y = newY;
+                r.player.mapx = static_cast<int>(r.player.x / 3);
+                r.player.mapy = static_cast<int>(r.player.y / 3);
+            }
         }
 
 

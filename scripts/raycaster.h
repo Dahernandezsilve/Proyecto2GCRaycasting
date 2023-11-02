@@ -61,6 +61,10 @@ public:
 
     Player player;
 
+    vector<string> getMap() const {
+        return map;
+    }
+
     void load_map(const string& filename) {
         ifstream file(filename);
         string line;
@@ -165,7 +169,7 @@ public:
                 break;
             }
 
-            d += 2;
+            d += 1;
             x = static_cast<int>(player.x + d * cos(a));
             y = static_cast<int>(player.y + d * sin(a));
         }
