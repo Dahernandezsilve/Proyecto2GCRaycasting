@@ -60,20 +60,81 @@ int fireSound() {
         return 1;
     }
 
-    if (SDL_OpenAudio(&wavSpec, nullptr) < 0) {
-        SDL_FreeWAV(wavBuffer);
+    SDL_AudioDeviceID audioDevice = SDL_OpenAudioDevice(nullptr, 0, &wavSpec, nullptr, 0);
+    if (audioDevice == 0) {
         // Manejar el error en caso de que la apertura de audio falle.
         return 2;
     }
 
-    SDL_QueueAudio(1, wavBuffer, wavLength);
-    SDL_PauseAudio(0);
+    // Reproduce el sonido una vez
+    SDL_QueueAudio(audioDevice, wavBuffer, wavLength);
+    SDL_PauseAudioDevice(audioDevice, 0);
 
-    // Espera a que termine la reproducción del sonido
+    // Espera a que termine la reproducción
     SDL_Delay(wavLength * 1000 / wavSpec.freq);
 
-    // Libera los recursos y cierra el audio
-    SDL_CloseAudio();
+    // Cierra el dispositivo de audio
+    SDL_CloseAudioDevice(audioDevice);
+    SDL_FreeWAV(wavBuffer);
+
+    return 0;
+}
+
+int reloadSound() {
+    SDL_AudioSpec wavSpec;
+    Uint32 wavLength;
+    Uint8* wavBuffer;
+
+    if (SDL_LoadWAV("../assets/reload.wav", &wavSpec, &wavBuffer, &wavLength) == nullptr) {
+        // Manejar el error en caso de que la carga de música falle.
+        return 1;
+    }
+
+    SDL_AudioDeviceID audioDevice = SDL_OpenAudioDevice(nullptr, 0, &wavSpec, nullptr, 0);
+    if (audioDevice == 0) {
+        // Manejar el error en caso de que la apertura de audio falle.
+        return 2;
+    }
+
+    // Reproduce el sonido una vez
+    SDL_QueueAudio(audioDevice, wavBuffer, wavLength);
+    SDL_PauseAudioDevice(audioDevice, 0);
+
+    // Espera a que termine la reproducción
+    SDL_Delay(wavLength * 1000 / wavSpec.freq);
+
+    // Cierra el dispositivo de audio
+    SDL_CloseAudioDevice(audioDevice);
+    SDL_FreeWAV(wavBuffer);
+
+    return 0;
+}
+
+int helloSound() {
+    SDL_AudioSpec wavSpec;
+    Uint32 wavLength;
+    Uint8* wavBuffer;
+
+    if (SDL_LoadWAV("../assets/hellodah.wav", &wavSpec, &wavBuffer, &wavLength) == nullptr) {
+        // Manejar el error en caso de que la carga de música falle.
+        return 1;
+    }
+
+    SDL_AudioDeviceID audioDevice = SDL_OpenAudioDevice(nullptr, 0, &wavSpec, nullptr, 0);
+    if (audioDevice == 0) {
+        // Manejar el error en caso de que la apertura de audio falle.
+        return 2;
+    }
+
+    // Reproduce el sonido una vez
+    SDL_QueueAudio(audioDevice, wavBuffer, wavLength);
+    SDL_PauseAudioDevice(audioDevice, 0);
+
+    // Espera a que termine la reproducción
+    SDL_Delay(wavLength * 1000 / wavSpec.freq);
+
+    // Cierra el dispositivo de audio
+    SDL_CloseAudioDevice(audioDevice);
     SDL_FreeWAV(wavBuffer);
 
     return 0;
@@ -241,6 +302,30 @@ void playFireSound() {
     }
 }
 
+void playReloadSound() {
+    int result = reloadSound();
+    if (result == 1) {
+        // Manejar el error en la carga o reproducción del sonido
+        std::cerr << "Error al cargar el sonido." << std::endl;
+    }
+    if (result == 2) {
+        // Manejar el error en la carga o reproducción del sonido
+        std::cerr << "Error al reproducir el sonido." << std::endl;
+    }
+}
+
+void playHelloSound() {
+    int result = helloSound();
+    if (result == 1) {
+        // Manejar el error en la carga o reproducción del sonido
+        std::cerr << "Error al cargar el sonido." << std::endl;
+    }
+    if (result == 2) {
+        // Manejar el error en la carga o reproducción del sonido
+        std::cerr << "Error al reproducir el sonido." << std::endl;
+    }
+}
+
 bool hasWon = false;
 
 int main(int argc, char* argv[])  {
@@ -320,9 +405,6 @@ int main(int argc, char* argv[])  {
 
     vector<string> map = r.getMap();
 
-    for (const std::string &element : map) {
-        std::cout << element << std::endl;
-    }
 
     std::thread musicThread(PlayMusicThread);
     int prevMouseX = 0;
@@ -339,15 +421,24 @@ int main(int argc, char* argv[])  {
             if (event.type == SDL_KEYDOWN) {
                 keys[event.key.keysym.scancode] = true;
             }
-            if (event.key.keysym.sym == SDLK_d) {
+            if (event.key.keysym.sym == SDLK_e)  {
                 // Iniciar un hilo para reproducir el sonido
                 std::thread soundThread(playFireSound);
-                soundThread.join();  // Puedes usar 'detach' si no necesitas esperar a que el hilo termine
+                soundThread.detach();  // Puedes usar 'detach' si no necesitas esperar a que el hilo termine
+            }
+            if (event.key.keysym.sym == SDLK_r) {
+                // Iniciar un hilo para reproducir el sonido
+                std::thread soundThread2(playReloadSound);
+                soundThread2.detach();  // Puedes usar 'detach' si no necesitas esperar a que el hilo termine
+            }
+            if (event.key.keysym.sym == SDLK_h) {
+                // Iniciar un hilo para reproducir el sonido
+                std::thread soundThread3(playHelloSound);
+                soundThread3.detach();  // Puedes usar 'detach' si no necesitas esperar a que el hilo termine
             }
             if (event.type == SDL_KEYUP) {
                 keys[event.key.keysym.scancode] = false;
             }
-
             // Captura los movimientos del mouse
             if (event.type == SDL_MOUSEMOTION) {
                 int mouseX = event.motion.x;
