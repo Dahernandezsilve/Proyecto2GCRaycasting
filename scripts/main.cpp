@@ -50,6 +50,35 @@ int PlayMusicThread() {
     SDL_Quit();
 }
 
+int fireSound() {
+    SDL_AudioSpec wavSpec;
+    Uint32 wavLength;
+    Uint8* wavBuffer;
+
+    if (SDL_LoadWAV("../assets/fire.wav", &wavSpec, &wavBuffer, &wavLength) == nullptr) {
+        // Manejar el error en caso de que la carga de música falle.
+        return 1;
+    }
+
+    if (SDL_OpenAudio(&wavSpec, nullptr) < 0) {
+        SDL_FreeWAV(wavBuffer);
+        // Manejar el error en caso de que la apertura de audio falle.
+        return 2;
+    }
+
+    SDL_QueueAudio(1, wavBuffer, wavLength);
+    SDL_PauseAudio(0);
+
+    // Espera a que termine la reproducción del sonido
+    SDL_Delay(wavLength * 1000 / wavSpec.freq);
+
+    // Libera los recursos y cierra el audio
+    SDL_CloseAudio();
+    SDL_FreeWAV(wavBuffer);
+
+    return 0;
+}
+
 void clear(SDL_Renderer* renderer) {
     SDL_SetRenderDrawColor(renderer, 25, 25, 25, 255);
     SDL_RenderClear(renderer);
@@ -192,8 +221,23 @@ string selectMapScreen(SDL_Renderer* renderer, string key) {
                 if (event.key.keysym.sym == SDLK_b) {
                     return "b";
                 }
+                if (event.key.keysym.sym == SDLK_c) {
+                    return "c";
+                }
             }
         }
+    }
+}
+
+void playFireSound() {
+    int result = fireSound();
+    if (result == 1) {
+        // Manejar el error en la carga o reproducción del sonido
+        std::cerr << "Error al cargar el sonido." << std::endl;
+    }
+    if (result == 2) {
+        // Manejar el error en la carga o reproducción del sonido
+        std::cerr << "Error al reproducir el sonido." << std::endl;
     }
 }
 
@@ -245,6 +289,7 @@ int main(int argc, char* argv[])  {
     ImageLoader::loadImage("7c","../assets/loseScreen/7C.png");
     ImageLoader::loadImage("8c","../assets/loseScreen/8C.png");
     ImageLoader::loadImage("select","../assets/select.png");
+    ImageLoader::loadImage("win","../assets/win.png");
 
     Raycaster r = { renderer };
     Color c = Color(20, 0, 0);
@@ -270,6 +315,8 @@ int main(int argc, char* argv[])  {
         r.load_map("../assets/map.txt");
     if (select == "b")
         r.load_map("../assets/map2.txt");
+    if (select == "c")
+        r.load_map("../assets/map3.txt");
 
     vector<string> map = r.getMap();
 
@@ -291,6 +338,11 @@ int main(int argc, char* argv[])  {
             }
             if (event.type == SDL_KEYDOWN) {
                 keys[event.key.keysym.scancode] = true;
+            }
+            if (event.key.keysym.sym == SDLK_d) {
+                // Iniciar un hilo para reproducir el sonido
+                std::thread soundThread(playFireSound);
+                soundThread.join();  // Puedes usar 'detach' si no necesitas esperar a que el hilo termine
             }
             if (event.type == SDL_KEYUP) {
                 keys[event.key.keysym.scancode] = false;
@@ -341,8 +393,6 @@ int main(int argc, char* argv[])  {
             int newXmap = newX/BLOCK;
             int newY = (r.player.y + static_cast<int>(speed * sin(r.player.a)));
             int newYmap = newY/BLOCK;
-
-            std::cout << map[newYmap][newXmap] << std::endl;
             if (map[newYmap][newXmap] == ' ' || map[newYmap][newXmap] == '.'){
                 r.player.x = newX;
                 r.player.y = newY;
@@ -355,7 +405,6 @@ int main(int argc, char* argv[])  {
             int newXmap = newX/BLOCK;
             int newY = (r.player.y - static_cast<int>(speed * sin(r.player.a)));
             int newYmap = newY/BLOCK;
-            std::cout << map[newYmap][newXmap] << std::endl;
             if (map[newYmap][newXmap] == ' ' || map[newYmap][newXmap] == '.'){
                 r.player.x = newX;
                 r.player.y = newY;
@@ -363,7 +412,6 @@ int main(int argc, char* argv[])  {
                 r.player.mapy = static_cast<int>(r.player.y / 3);
             }
         }
-
 
         if (hasWon) {
             // El jugador ha ganado, muestra la pantalla de victoria.

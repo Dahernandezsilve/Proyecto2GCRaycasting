@@ -267,7 +267,7 @@ public:
         SDL_RenderClear(renderer);
 
         // Dibuja la pantalla de victoria (imagen o texto)
-        ImageLoader::render(renderer, "8c", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        ImageLoader::render(renderer, "win", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
         // Refresca el renderizador
         SDL_RenderPresent(renderer);
